@@ -14,6 +14,21 @@ public class Item {
     static PreparedStatement ps;
     static ResultSet rs;
     static Scanner scanner = new Scanner(System.in);
+
+    public static void createItemsTable() {
+        try {
+            ps = connection.prepareStatement("CREATE TABLE IF NOT EXISTS items(" +
+                    "id serial PRIMARY KEY," +
+                    "name varchar(255) NOT NULL," +
+                    "description varchar(255) NOT NULL," +
+                    "qty_in_stock int," +
+                    "price float)");
+            ps.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     public static void getAllItems(){
 
 
@@ -105,4 +120,58 @@ public class Item {
         }
 
     }
-}
+    // Implement 2 methods, the first method should be called
+    // deleteItem, it should prompt the user to enter the id on the
+    //item to be deleted, return a boolean if the operation is successful
+    //The second method should be called getItemById and it should
+    //prompt the user to also the id of the item in question
+
+    public static boolean deleteItem() {
+
+        //Prompts - user info
+
+        System.out.print("Enter the items id you want to delete: ");
+        int id = scanner.nextInt();
+
+
+        try {
+            ps = connection.prepareStatement("DELETE FROM items WHERE id = "+id+"");
+
+            ps.execute();
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void getItemById() {
+
+        System.out.print("Enter the items id you want to get info: ");
+        int id = scanner.nextInt();
+
+        try{
+            ps = connection.prepareStatement("SELECT * FROM items WHERE id = "+id);
+            rs = ps.executeQuery();
+
+
+            while (rs.next()) {
+
+                String name = "name: " + rs.getString("name");
+                String desc = "desc: " + rs.getString("description");
+                String qty = "qty: " + rs.getInt("qty_in_stock");
+                String price = "price: " + rs.getFloat("price");
+
+
+                System.out.println(id + " " + name + " " + desc + " " + qty + " " + price);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+    //
+
+    }
+
