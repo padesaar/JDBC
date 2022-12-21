@@ -31,4 +31,16 @@ public class Main {
     // Add two features to this application that allows user to view
     //all the orders and all the sales.
 
+    //Exercise
+    //Create a method on the sales class that takes in the
+    //following input from the user:
+    // item id, qty purchased
+
+    //Exercise
+    //Complete the sales class by adding the following methods:
+    // Add a method called create a new sale:
+    // -collate the total price of all the items bought using the
+    // handleItemTotal method and log the total to the console
+
+
 }
