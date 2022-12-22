@@ -1,8 +1,10 @@
 package controllers;
 
 import db.Database;
+import objects.OrderObject;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,28 +40,31 @@ public class Sales {
 
 
         try{
-            ps = connection.prepareStatement("SELECT * FROM sales");
+            ps = connection.prepareStatement("SELECT sales.*, customer.first_name, customer.last_name FROM sales LEFT JOIN customer ON sales.customer_id = customer.id");
             rs = ps.executeQuery();
 
             //Loop through the result set
             while (rs.next()) {
                 String id = "id: " + rs.getInt("id");
+                String customer_id = "customer_id" + rs.getInt("customer_id");
                 String date_purchased = "date_purchased: " + rs.getTimestamp("date_purchased");
                 String total = "total: " + rs.getFloat("total");
+                String firstName = "first_name: " + rs.getString("first_name");
+                String lastName = "last_name: " + rs.getString("last_name");
 
-
-                System.out.println(id + ", " + date_purchased + ", " + total);
+                System.out.println(id + ", " + customer_id + ", " + total +  ", " + firstName + ", " + lastName + ", " +date_purchased);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static Map<Integer, Float> handleItemTotal() {
+    private static List<OrderObject> handleItemTotal() {
         System.out.println("Enter how many items were bought: ");
         int numberOfItems = scanner.nextInt();
 
-        Map<Integer, Float> items = new HashMap<>();
+       // Map<Integer, Float> items = new HashMap<>();
+        List<OrderObject> itemsPurchased = new ArrayList<>();
         float itemTotal = 0;
 
         for (int i = 0; i < numberOfItems; i++) {
@@ -81,7 +86,8 @@ public class Sales {
 
                 }
                 itemTotal = itemPrice * qty;
-                items.putIfAbsent(itemId, itemTotal);
+               // items.putIfAbsent(itemId, itemTotal);
+                itemsPurchased.add(new OrderObject(itemId, qty, itemTotal));
 
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -89,17 +95,56 @@ public class Sales {
 
         }
 
-       return items;
+       return itemsPurchased;
 
     }
 
-    public static void createNewSale() {
+    private static float collateOrderTotal(List<OrderObject> orders) {
+       float sum = 0;
 
-        handleItemTotal();
-        float totalPrice;
+        for (OrderObject order : orders) {
+            sum += order.getTotalOnItem();
 
+        }
+        return sum;
+    }
 
+    public static void createSaleAndOrder() {
+        // Prompt the user for the customer id
+        System.out.println("Enter the customer id: ");
+        int customerId = scanner.nextInt();
+
+        // Get the items purchased
+        List<OrderObject> itemsPurchased = handleItemTotal();
+
+        // Get the total on the items
+        float totalSale = collateOrderTotal(itemsPurchased);
+
+        int saleId = 0;
+        java.util.Date regDate = new java.util.Date();
+        Date sqlDate = new Date(regDate.getTime());
+
+        try {
+            ps = connection.prepareStatement("INSERT INTO sales(customer_id, date_purchased, total)" +
+                    "VALUES(" + customerId + ", current_timestamp, " + totalSale + ") RETURNING id");
+            rs = ps.executeQuery();
+            // Loop through the result set until empty
+            while (rs.next()) {
+                saleId = rs.getInt("id");
+                //for each sale, use the id to create the orders
+                for (OrderObject order : itemsPurchased) {
+                    ps = connection.prepareStatement("INSERT INTO orders(sale_id, item_id, qty_purchased, item_total) "+
+                            "VALUES(" + saleId + ", " + order.getItemId() + ", " + order.getQtyPurchased() + ", " + order.getTotalOnItem() + ")");
+                ps.execute();
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
     }
+
+
 
 }

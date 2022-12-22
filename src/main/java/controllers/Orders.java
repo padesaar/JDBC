@@ -43,16 +43,19 @@ public class Orders {
 
             //Loop through the result set
             while (rs.next()) {
+                String id = "sale_id" + rs.getInt("sale_id");
                 String qty = "qty_purchased: " + rs.getInt("qty_purchased");
                 String item_total = "item_total: " + rs.getInt("item_total");
+                String itemId = "item_id" + rs.getInt("item_id");
 
 
-                System.out.println(qty + ", " + item_total);
+                System.out.println(id + ", " + itemId + ", " + qty + ", " +item_total);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
 
 
